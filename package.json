@@ -4,10 +4,12 @@
   "version": "0.0.0",
   "private": true,
   "packageManager": "pnpm@9.15.0",
+  "description": "Better WeRead web page turning experience",
   "author": "Kevin Kwong <kvoon@duck.com>",
   "license": "MIT",
   "homepage": "https://github.com/antfu/userscript-weread-page-turner#readme",
   "repository": {
+
     "type": "git",
     "url": "git+https://github.com/antfu/userscript-weread-page-turner.git"
   },
