@@ -1,0 +1,23 @@
+{
+  "name": "userscript-weread-page-turner",
+  "type": "module",
+  "version": "0.0.0",
+  "private": true,
+  "packageManager": "pnpm@9.15.0",
+  "author": "Kevin Kwong <kvoon@duck.com>",
+  "license": "MIT",
+  "homepage": "https://github.com/antfu/userscript-weread-page-turner#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/antfu/userscript-weread-page-turner.git"
+  },
+  "bugs": "https://github.com/antfu/userscript-weread-page-turner/issues",
+  "scripts": {
+    "lint": "eslint ."
+  },
+  "devDependencies": {
+    "@antfu/eslint-config": "^3.11.2",
+    "bumpp": "^9.9.0",
+    "eslint": "^9.16.0"
+  }
+}

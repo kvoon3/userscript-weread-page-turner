@@ -1,11 +1,12 @@
-# ZIP files
-*.zip
-
-# OS generated files
+.cache
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
+.idea
+*.log
+*.tgz
+coverage
+dist
+lib-cov
+logs
+node_modules
+temp
+playground/*
