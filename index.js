@@ -11,11 +11,18 @@
 // @grant        none
 // @run-at       document-body
 // @license      MIT
+// @downloadURL https://update.greasyfork.org/scripts/520296/Wechat%20Page%20Turner.user.js
+// @updateURL https://update.greasyfork.org/scripts/520296/Wechat%20Page%20Turner.meta.js
 // ==/UserScript==
 
 (function () {
   'use strict'
   document.addEventListener('wheel', (e) => {
+    const isReading = !document.querySelector('.wr_mask_Show')
+
+    if (!isReading)
+      return
+
     e.preventDefault()
 
     const to = e.deltaY > 0 ? 'next' : 'prev'
