@@ -15,7 +15,7 @@
   "bugs": "https://github.com/antfu/userscript-weread-page-turner/issues",
   "scripts": {
     "lint": "eslint .",
-    "release": "npx bumpp"
+    "release": "bumpp -x \"node bump.js\" --all"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^3.11.2",
