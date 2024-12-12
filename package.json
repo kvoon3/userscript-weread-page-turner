@@ -9,13 +9,13 @@
   "license": "MIT",
   "homepage": "https://github.com/antfu/userscript-weread-page-turner#readme",
   "repository": {
-
     "type": "git",
     "url": "git+https://github.com/antfu/userscript-weread-page-turner.git"
   },
   "bugs": "https://github.com/antfu/userscript-weread-page-turner/issues",
   "scripts": {
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "release": "npx bumpp"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^3.11.2",
