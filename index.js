@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Wechat Page Turner
 // @namespace    https://kvoonme.netlify.app/
-// @version      0.0.0
+// @version      0.0.2
 // @description  Better WeRead web page turning experience
 // @author       Kevin Kwong
 // @homepageURL  https://github.com/kvoon3/userscript-weread-page-turner

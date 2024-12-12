@@ -1,7 +1,7 @@
 {
   "name": "userscript-weread-page-turner",
   "type": "module",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "private": true,
   "packageManager": "pnpm@9.15.0",
   "description": "Better WeRead web page turning experience",
