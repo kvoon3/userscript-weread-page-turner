@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         Wechat Page Turner
+// @name         WeRead Page Turner
 // @namespace    https://kvoonme.netlify.app/
 // @version      0.0.2
 // @description  Better WeRead web page turning experience
@@ -11,8 +11,8 @@
 // @grant        none
 // @run-at       document-body
 // @license      MIT
-// @downloadURL https://update.greasyfork.org/scripts/520296/Wechat%20Page%20Turner.user.js
-// @updateURL https://update.greasyfork.org/scripts/520296/Wechat%20Page%20Turner.meta.js
+// @downloadURL https://update.greasyfork.org/scripts/520296/WeRead%20Page%20Turner.user.js
+// @updateURL https://update.greasyfork.org/scripts/520296/WeRead%20Page%20Turner.meta.js
 // ==/UserScript==
 
 (function () {
