@@ -1,9 +1,15 @@
 /**
- * Shared WeRead wheel → page-turn policy.
+ * Shared WeRead wheel + keyboard → page-turn / bookmark policy.
  * Used by the Greasy Fork userscript (index.js) and the MV3 extension content script.
  *
- * Only intercepts wheel in paginated horizontal mode when the pointer is on the
+ * Wheel: only intercepts in paginated horizontal mode when the pointer is on the
  * reading surface and no overlay / scrollable panel should receive the scroll.
+ *
+ * Keyboard (case-insensitive letters, no Ctrl/Meta/Alt/Shift):
+ * - Previous / next page: a/d, h/l (horizontal mode only)
+ * - ArrowLeft / ArrowRight: let native turn when clear; block behind overlays
+ * - Bookmark: s/j always (if control exists); ArrowDown remaps to bookmark in
+ *   horizontal mode only (keeps native scroll in continuous mode)
  */
 'use strict'
 
@@ -31,6 +37,8 @@ function installWereadPageTurner(doc, win) {
     '.reader_common_dialog',
     '.wr_dialog_mask',
   ]
+
+  const CATALOG_SELECTOR = '.readerCatalog'
 
   let cooldownUntil = 0
   let deltaCarry = 0
@@ -87,6 +95,10 @@ function installWereadPageTurner(doc, win) {
     return false
   }
 
+  function isEditableFocused() {
+    return isEditableTarget(doc.activeElement)
+  }
+
   function pointerHasScrollableAncestor(target) {
     let el = target instanceof Element ? target : (target && target.parentElement)
     while (el && el !== doc.body && el !== doc.documentElement) {
@@ -97,9 +109,13 @@ function installWereadPageTurner(doc, win) {
     return false
   }
 
-  function isOverlayOpen() {
+  function isOverlayOpen(options) {
+    const except = (options && options.except) || []
     for (let i = 0; i < OVERLAY_SELECTORS.length; i++) {
-      const nodes = doc.querySelectorAll(OVERLAY_SELECTORS[i])
+      const selector = OVERLAY_SELECTORS[i]
+      if (except.includes(selector))
+        continue
+      const nodes = doc.querySelectorAll(selector)
       for (let j = 0; j < nodes.length; j++) {
         if (isElementVisible(nodes[j]))
           return true
@@ -108,8 +124,33 @@ function installWereadPageTurner(doc, win) {
     return false
   }
 
+  function isCatalogPanelVisible() {
+    const nodes = doc.querySelectorAll(CATALOG_SELECTOR)
+    for (let i = 0; i < nodes.length; i++) {
+      if (isElementVisible(nodes[i]))
+        return true
+    }
+    return false
+  }
+
+  function isNonCatalogOverlayOpen() {
+    // Opening the catalog also shows a visible companion `.wr_mask_Show` dimmer
+    // (verified live). Ignore that mask only while `.readerCatalog` itself is
+    // the open panel, so bookmark shortcuts still work with the catalog open.
+    // Do not blanket-ignore `.wr_mask_Show`: notes / AI / other panels keep
+    // their own overlay selectors and must still block bookmark.
+    const except = [CATALOG_SELECTOR]
+    if (isCatalogPanelVisible())
+      except.push('.wr_mask_Show')
+    return isOverlayOpen({ except })
+  }
+
   function isPaginatedHorizontalMode() {
     return !!doc.querySelector('.wr_horizontalReader')
+  }
+
+  function hasKeyModifier(event) {
+    return event.ctrlKey || event.metaKey || event.altKey || event.shiftKey
   }
 
   function dispatchArrowKey(key) {
@@ -135,6 +176,29 @@ function installWereadPageTurner(doc, win) {
       return
     }
     dispatchArrowKey('ArrowLeft')
+  }
+
+  function findBookmarkControl() {
+    const corner = doc.querySelector('.wr_reader_float_corner_bookmark_actionArea')
+    if (corner)
+      return corner
+
+    return doc.querySelector(
+      'li.readerCatalog_list_item.readerCatalog_list_item_selected div.readerCatalog_list_item_meta_add_bookMark',
+    ) || doc.querySelector('div.readerCatalog_list_item_meta_add_bookMark')
+  }
+
+  /**
+   * Prefer the page-corner ribbon (exists in CSS; often translateY(-100%) until hover),
+   * then the catalog selected-row "+书签" control (may be in a display:none catalog).
+   * Click whatever exists; leave success/failure to WeRead (e.g. logged-out toast).
+   */
+  function clickBookmarkControl() {
+    const control = findBookmarkControl()
+    if (!control)
+      return false
+    control.click()
+    return true
   }
 
   function shouldHandleWheel(event) {
@@ -170,10 +234,102 @@ function installWereadPageTurner(doc, win) {
     turnPage(direction)
   }
 
+  function blockNativePageKey(event) {
+    event.preventDefault()
+    event.stopPropagation()
+  }
+
+  function onKeyDown(event) {
+    const key = event.key
+
+    // ArrowLeft / ArrowRight: never re-click pager or re-dispatch (double-turn).
+    // Block only when an overlay would let the book turn behind the panel.
+    // Never preventDefault inside an editable (caret / selection).
+    if (key === 'ArrowLeft' || key === 'ArrowRight') {
+      if (isEditableFocused())
+        return
+      if (hasKeyModifier(event))
+        return
+      if (isOverlayOpen())
+        blockNativePageKey(event)
+      return
+    }
+
+    // ArrowDown → bookmark in horizontal mode; leave continuous scroll alone.
+    if (key === 'ArrowDown') {
+      if (!isPaginatedHorizontalMode())
+        return
+      if (isEditableFocused())
+        return
+      if (hasKeyModifier(event))
+        return
+
+      // Non-catalog overlays: block behind-the-panel paging, do not bookmark.
+      if (isNonCatalogOverlayOpen()) {
+        blockNativePageKey(event)
+        return
+      }
+
+      // Remap only when a native bookmark control exists (flyleaf has none —
+      // leave ArrowDown as native next-page there). Still block when catalog is
+      // open with no control, so the book does not turn behind the panel.
+      const bookmark = findBookmarkControl()
+      if (bookmark) {
+        blockNativePageKey(event)
+        bookmark.click()
+        return
+      }
+      if (isOverlayOpen())
+        blockNativePageKey(event)
+      return
+    }
+
+    // Letter shortcuts: ignore browser / IME chords.
+    if (hasKeyModifier(event))
+      return
+    if (key.length !== 1)
+      return
+    if (isEditableFocused())
+      return
+
+    const letter = key.toLowerCase()
+
+    if (letter === 'a' || letter === 'h') {
+      if (!isPaginatedHorizontalMode())
+        return
+      if (isOverlayOpen())
+        return
+      event.preventDefault()
+      turnPage('prev')
+      return
+    }
+
+    if (letter === 'd' || letter === 'l') {
+      if (!isPaginatedHorizontalMode())
+        return
+      if (isOverlayOpen())
+        return
+      event.preventDefault()
+      turnPage('next')
+      return
+    }
+
+    if (letter === 's' || letter === 'j') {
+      // Allowed with catalog open; skip other overlays / missing controls (e.g. flyleaf).
+      if (isNonCatalogOverlayOpen())
+        return
+      event.preventDefault()
+      clickBookmarkControl()
+    }
+  }
+
+  // Capture phase so we can stop ArrowDown / overlay ArrowLeft|Right before WeRead.
   doc.addEventListener('wheel', onWheel, { passive: false, capture: false })
+  doc.addEventListener('keydown', onKeyDown, { capture: true })
 
   return function uninstallWereadPageTurner() {
     doc.removeEventListener('wheel', onWheel, { capture: false })
+    doc.removeEventListener('keydown', onKeyDown, { capture: true })
   }
 }
 
