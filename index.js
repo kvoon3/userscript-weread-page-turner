@@ -132,8 +132,25 @@
       return false
     }
 
+    function isCatalogPanelVisible() {
+      const nodes = doc.querySelectorAll(CATALOG_SELECTOR)
+      for (let i = 0; i < nodes.length; i++) {
+        if (isElementVisible(nodes[i]))
+          return true
+      }
+      return false
+    }
+
     function isNonCatalogOverlayOpen() {
-      return isOverlayOpen({ except: [CATALOG_SELECTOR] })
+      // Opening the catalog also shows a visible companion `.wr_mask_Show` dimmer
+      // (verified live). Ignore that mask only while `.readerCatalog` itself is
+      // the open panel, so bookmark shortcuts still work with the catalog open.
+      // Do not blanket-ignore `.wr_mask_Show`: notes / AI / other panels keep
+      // their own overlay selectors and must still block bookmark.
+      const except = [CATALOG_SELECTOR]
+      if (isCatalogPanelVisible())
+        except.push('.wr_mask_Show')
+      return isOverlayOpen({ except })
     }
 
     function isPaginatedHorizontalMode() {
