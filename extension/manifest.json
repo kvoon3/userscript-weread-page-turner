@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "WeRead Page Turner",
+  "version": "0.0.3",
+  "description": "Turn WeChat Reading web pages with the mouse wheel, without stealing scroll from side panels.",
+  "content_scripts": [
+    {
+      "matches": ["https://weread.qq.com/web/reader/*"],
+      "js": ["weread-wheel.js", "content.js"],
+      "run_at": "document_body"
+    }
+  ]
+}
