@@ -7,7 +7,7 @@
     {
       "matches": ["https://weread.qq.com/web/reader/*"],
       "js": ["weread-wheel.js", "content.js"],
-      "run_at": "document_body"
+      "run_at": "document_idle"
     }
   ]
 }
